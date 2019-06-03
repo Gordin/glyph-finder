@@ -4,8 +4,16 @@ from fontTools.ttLib import TTFont
 from sh import fc_list
 import sys
 import os
-# font = TTFont('/usr/share/fonts/noto/NotoColorEmoji.ttf')
-# snake = '🐍'
+
+
+class silence:
+    def __enter__(self):
+        sys.stderr = open(os.devnull, "w")
+        sys.stdout = open(os.devnull, "w")
+
+    def __exit__(self, type, value, traceback):
+        sys.stderr = sys.__stderr__
+        sys.stdout = sys.__stdout__
 
 
 class GlyphChecker(object):
@@ -28,12 +36,9 @@ class GlyphChecker(object):
     def check_font(self, fontname):
         """Checks if Glyph is included in given font"""
 
-        sys.stdout = open(os.devnull, "w")
-        sys.stderr = open(os.devnull, "w")
         font = TTFont(fontname)
-        found_glyph = font.getReverseGlyphMap().get(self.glyph_code)
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
+        with silence():
+            found_glyph = font.getReverseGlyphMap().get(self.glyph_code)
 
         # if found_glyph:
         #     __import__('pprint').pprint("Found glyph in {}".format(fontname))
@@ -53,6 +58,7 @@ class GlyphChecker(object):
 if __name__ == "__main__":
     args = sys.argv
     if len(args) != 2:
+        print('try this: ./glyph_finder.py \'🐍\'')
         sys.exit(1)
     checker = GlyphChecker(args[1])
     checker.check_all_fonts()
